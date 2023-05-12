@@ -1,0 +1,16 @@
+accounts:
+  - # 账号, 现只支持 QQ 数字账号，可配置多个账号
+    account: 123456
+    password: 123456
+    # 账号配置. 可用配置列表 (注意大小写):
+    # "protocol": "ANDROID_PHONE" / "ANDROID_PAD" / "ANDROID_WATCH"，登录模式
+    # "enable": true
+    configuration:
+      protocol: ANDROID_PHONE
+      enable: false   # 请注意，如果配置自动登录，务必将此参数改为 true
+  - # 账号, 现只支持 QQ 数字账号，可配置多个账号
+    account: qq
+    password: pwd
+    configuration:
+      protocol: ANDROID_PAD
+      enable: false

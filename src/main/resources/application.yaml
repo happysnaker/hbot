@@ -1,0 +1,19 @@
+spring:
+  output:
+    ansi:
+      enabled: ALWAYS
+hrobot:
+  path:
+    rootDir: 'devbox'   # 默认为程序工作路径
+    botDir: 'bots'      # 内嵌在 rootDir 下，保存账号信息
+    dataDir: 'data'      # 内嵌在 rootDir 下，保存程序运行日志等数据信息
+    configDir: 'config'  # 内嵌在 rootDir 下，保存配置信息
+  command: # 命令控制配置
+    prefix: '#'
+    maxSaveBytes: 1024
+    errorLogFile: error.log
+  logging: # 日志输出配置
+    level: debug     # debug < info < warning < error，低于设定模式的日志不会被输出
+    toFileMod: 2   # 0 代表不输出到文件，1 仅将 warning 以上的日志会输出到文件，2 将所有日志输出到文件
+    filePath: run.log    # 日志输出的文件，会自动保存在 dataDir 中，仅在 toFileMod 不为 0 的情况下有效，默认值为 run.log
+    maxSize: 1024kb     # 日志阈值，达到阈值时会新建日志文件，单位 kb、mb、gb

@@ -1,5 +1,9 @@
 # User-specific stuff
 .idea/
+.mvn/
+cache/
+devbox/
+target/
 
 *.iml
 *.ipr

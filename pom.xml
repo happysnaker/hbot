@@ -8,9 +8,9 @@
         <version>3.0.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.github.happysnaker</groupId>
+    <groupId>io.github.happysnaker</groupId>
     <artifactId>hbot-core</artifactId>
-    <version>0.0.27</version>
+    <version>0.0.0</version>
     <name>hbot-core</name>
     <description>hbot-core</description>
     <properties>

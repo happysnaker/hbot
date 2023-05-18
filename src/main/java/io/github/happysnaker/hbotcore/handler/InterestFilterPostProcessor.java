@@ -45,6 +45,13 @@ public class InterestFilterPostProcessor implements BeanPostProcessor {
                     // ignore
                 }
             }
+        } else {
+            if (bean.getClass().isAnnotationPresent(InterestFilter.class)) {
+                throw new IllegalStateException("InterestFilter 只能在 AdaptInterest 类上生效");
+            }
+            if (bean.getClass().isAnnotationPresent(InterestFilters.class)) {
+                throw new IllegalStateException("InterestFilters 只能在 AdaptInterest 类上生效");
+            }
         }
         return bean;
     }

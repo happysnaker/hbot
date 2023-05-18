@@ -10,6 +10,7 @@ import io.github.happysnaker.hbotcore.intercept.Interceptor;
 import io.github.happysnaker.hbotcore.intercept.Intercept;
 import io.github.happysnaker.hbotcore.logger.Logger;
 import io.github.happysnaker.hbotcore.utils.HBotUtil;
+import lombok.Getter;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.PlainText;
@@ -27,10 +28,13 @@ import java.util.stream.Collectors;
  *
  * @see Context
  */
-@Component
+@Component("proxyHandler")
 public class MessageHandlerProxy implements MessageEventHandler {
+    @Getter
     private final List<MessageEventHandler> handlers;
+    @Getter
     private final List<Interceptor> preInterceptors;
+    @Getter
     private final List<Interceptor> postInterceptors;
 
 
@@ -55,7 +59,7 @@ public class MessageHandlerProxy implements MessageEventHandler {
             handler annotation1 = b.getClass().getAnnotation(handler.class);
             if (annotation0.isCommandHandler() || annotation1.isCommandHandler()) {
                 if (!annotation0.isCommandHandler() || !annotation1.isCommandHandler()) {
-                    return annotation0.isCommandHandler() ? 1 : -1;
+                    return annotation0.isCommandHandler() ? -1 : 1;
                 }
             }
             int aa = annotation0.priority();

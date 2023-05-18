@@ -148,7 +148,7 @@ public class Interest {
          * @param filter 条件
          */
         public InterestBuilder onCondition(InterestFilter filter) {
-            return onCondition(filter.mode(), filter.condition(), filter.callbackMethod().equals("null") ? null : filter.callbackMethod());
+            return onCondition(filter.mode(), filter.condition(), filter.callbackMethod().isEmpty() ? null : filter.callbackMethod());
         }
 
         /**

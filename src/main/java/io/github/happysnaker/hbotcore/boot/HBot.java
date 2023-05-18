@@ -37,19 +37,23 @@ public class HBot {
     /**
      * 程序工作路径
      */
-    public static String ROOT_DIR = System.getProperty("user.dir");
+    public static String ROOT_DIR;
     /**
      * bot 目录，bot 目录下可能会存放多个 bot 的文件，以它们的 qq 号命名
      */
-    public static String BOT_DIR = joinPath(ROOT_DIR, "bots");
+    public static String BOT_DIR;
     /**
      * 配置文件存放路径，主要包含两个配置文件，config.yaml 和 auto-login.yaml 文件
      */
-    public static String CONFIG_DIR = joinPath(ROOT_DIR, "config");
+    public static String CONFIG_DIR;
     /**
      * 运行时数据文件目录
      */
-    public static String DATA_DIR = joinPath(ROOT_DIR, "data");
+    public static String DATA_DIR;
+    /**
+     * HBOt 插件存放目录
+     */
+    public static String PLUGIN_DIR;
     /**
      * HRobot 使用的日志系统
      */
@@ -59,30 +63,46 @@ public class HBot {
      */
     public static ApplicationContext applicationContext;
 
+    static {
+        // default
+        ROOT_DIR = System.getProperty("user.dir");
+        BOT_DIR = joinPath(ROOT_DIR, "bots");
+        CONFIG_DIR = joinPath(ROOT_DIR, "config");
+        DATA_DIR = joinPath(ROOT_DIR, "data");
+        PLUGIN_DIR = joinPath(ROOT_DIR, "plugins");
+    }
 
     public HBot(
             @Value("${hrobot.path.rootDir:}") String rootDir,
             @Value("${hrobot.path.botDir:}") String botDir,
             @Value("${hrobot.path.dataDir:}") String dataDir,
-            @Value("${hrobot.path.configDir:}") String configDir) {
-        setPath(rootDir, botDir, dataDir, configDir);
+            @Value("${hrobot.path.configDir:}") String configDir,
+            @Value("${hrobot.path.pluginDir:}") String pluginDir) {
+        setPath(rootDir, botDir, dataDir, configDir, pluginDir);
     }
 
 
     /**
      * 设置程序工作目录
-     * @param rootDir 主目录
-     * @param botDir  账号目录，此目录会内嵌在 rootDir，请勿在路径中包含 rootDir
+     *
+     * @param rootDir   主目录
+     * @param botDir    账号目录，此目录会内嵌在 rootDir，请勿在路径中包含 rootDir
      * @param dataDir   数据目录，此目录会内嵌在 rootDir，请勿在路径中包含 rootDir
      * @param configDir 配置目录，此目录会内嵌在 rootDir，请勿在路径中包含 rootDir
+     * @param pluginDir 插件目录，此目录会内嵌在 rootDir，请勿在路径中包含 rootDir
      */
-    public static void setPath(String rootDir, String botDir, String dataDir, String configDir) {
+    public static void setPath(String rootDir, String botDir, String dataDir, String configDir, String pluginDir) {
         if (!StringUtil.isNullOrEmpty(rootDir)) {
             ROOT_DIR = rootDir;
             File file = new File(ROOT_DIR);
             if (!file.exists()) {
                 boolean b = file.mkdirs();
             }
+            // flush
+            BOT_DIR = joinPath(ROOT_DIR, "bots");
+            CONFIG_DIR = joinPath(ROOT_DIR, "config");
+            DATA_DIR = joinPath(ROOT_DIR, "data");
+            PLUGIN_DIR = joinPath(ROOT_DIR, "plugins");
         }
         if (!StringUtil.isNullOrEmpty(botDir))
             BOT_DIR = joinPath(ROOT_DIR, botDir);
@@ -90,6 +110,8 @@ public class HBot {
             DATA_DIR = joinPath(ROOT_DIR, dataDir);
         if (!StringUtil.isNullOrEmpty(configDir))
             CONFIG_DIR = joinPath(ROOT_DIR, configDir);
+        if (!StringUtil.isNullOrEmpty(pluginDir))
+            PLUGIN_DIR = joinPath(ROOT_DIR, pluginDir);
 
         // init
         LOGGER = MiraiLogger.Factory.INSTANCE.create(PlatformLogger.class);
@@ -115,6 +137,11 @@ public class HBot {
         if (!data.exists()) {
             boolean b = data.mkdirs();
         }
+
+        File plugins = new File(PLUGIN_DIR);
+        if (!plugins.exists()) {
+            boolean b = plugins.mkdirs();
+        }
     }
 
     // set context
@@ -129,18 +156,47 @@ public class HBot {
 
 
     /**
-     * 根据默认的配置项登录一个 bot
+     * 根据默认的配置项登录一个 bot(以 PHONE 登录)
      *
      * @param qq       账号
      * @param password 密码
      */
     public static void loginBot(long qq, String password) {
+        loginBot(qq, password, BotConfiguration.MiraiProtocol.ANDROID_PHONE);
+    }
+
+
+    /**
+     * 以特定的协议登录一个 bot
+     *
+     * @param qq       账号
+     * @param password 密码
+     */
+    public static void loginBot(long qq, String password, BotConfiguration.MiraiProtocol protocol) {
         loginBot(qq, password, new BotConfiguration() {
             {
                 setWorkingDir(new File(BOT_DIR, String.valueOf(qq)));
                 fileBasedDeviceInfo();
                 setHeartbeatStrategy(HeartbeatStrategy.STAT_HB);
-                setProtocol(MiraiProtocol.ANDROID_PAD);
+                setProtocol(protocol);
+                noNetworkLog();
+                setHighwayUploadCoroutineCount(Runtime.getRuntime().availableProcessors() << 1);
+            }
+        });
+    }
+
+    /**
+     * 扫码登录
+     * @param qq
+     * @param protocol 协议仅支持 macos 和 watch
+     */
+    public static void loginBotByQRCode(long qq, BotConfiguration.MiraiProtocol protocol) {
+        loginBotByQRCode(qq, new BotConfiguration() {
+            {
+                setWorkingDir(new File(BOT_DIR, String.valueOf(qq)));
+                fileBasedDeviceInfo();
+                setHeartbeatStrategy(HeartbeatStrategy.STAT_HB);
+                setProtocol(protocol);
                 noNetworkLog();
                 setHighwayUploadCoroutineCount(Runtime.getRuntime().availableProcessors() << 1);
             }
@@ -148,11 +204,21 @@ public class HBot {
     }
 
 
+    /**
+     * 扫码登录
+     * @param qq
+     * @param cfg
+     */
     public static void loginBotByQRCode(long qq, BotConfiguration cfg) {
         File file = new File(BOT_DIR, String.valueOf(qq));
         if (!file.exists()) {
             boolean b = file.mkdirs();
         }
+        if (cfg.getProtocol() != BotConfiguration.MiraiProtocol.MACOS &&
+                cfg.getProtocol() != BotConfiguration.MiraiProtocol.ANDROID_WATCH) {
+            throw new IllegalArgumentException("Using QRCode, protocol must be watch or macos, but actually is " + cfg.getProtocol());
+        }
+        cfg.setWorkingDir(new File(BOT_DIR, String.valueOf(qq)));
         BotFactory.INSTANCE.newBot(qq, BotAuthorization.byQRCode(), cfg).login();
     }
 
@@ -168,6 +234,7 @@ public class HBot {
         if (!file.exists()) {
             boolean b = file.mkdirs();
         }
+        cfg.setWorkingDir(new File(BOT_DIR, String.valueOf(qq)));
         BotFactory.INSTANCE.newBot(qq, pwd, cfg).login();
     }
 
@@ -184,15 +251,15 @@ public class HBot {
         }
         MapGetter mg = new MapGetter((Object) yaml.load(IOUtil.readFile(file)));
         int count = 0;
-        for (MapGetter accounts : mg.getMapGetterList("accounts")) {
-            MapGetter configuration = accounts.getMapGetter("configuration");
+        for (MapGetter account : mg.getMapGetterList("accounts")) {
+            boolean byQRCode = account.getOrDefault("byQRCode", false, Boolean.class);
+            MapGetter configuration = account.getMapGetter("configuration");
             if (!configuration.getBoolean("enable")) {
                 continue;
             }
-            long account = accounts.getLong("account");
-            String password = accounts.getString("password", true);
+            long qq = account.getLong("account");
+            String password = account.getString("password", true);
             String protocol = configuration.getString("protocol");
-            boolean byQRCode = configuration.getOrDefault("byQRCode", false, Boolean.class);
             BotConfiguration.MiraiProtocol miraiProtocol = switch (protocol) {
                 case "ANDROID_PHONE" -> BotConfiguration.MiraiProtocol.ANDROID_PHONE;
                 case "ANDROID_PAD" -> BotConfiguration.MiraiProtocol.ANDROID_PAD;
@@ -204,7 +271,7 @@ public class HBot {
             };
             BotConfiguration cfg = new BotConfiguration() {
                 {
-                    setWorkingDir(new File(BOT_DIR, String.valueOf(account)));
+                    setWorkingDir(new File(BOT_DIR, String.valueOf(qq)));
                     fileBasedDeviceInfo();
                     setHeartbeatStrategy(HeartbeatStrategy.STAT_HB);
                     setProtocol(miraiProtocol);
@@ -213,11 +280,11 @@ public class HBot {
                 }
             };
             if (!byQRCode) {
-                loginBot(account, password, cfg);
+                loginBot(qq, password, cfg);
             } else {
                 Logger.info("Login by QRCode for %d, please make sure the protocol is watch or macos, " +
-                        "current protocol is %s", account, cfg.getProtocol().toString());
-                loginBotByQRCode(account, cfg);
+                        "current protocol is %s", qq, cfg.getProtocol().toString());
+                loginBotByQRCode(qq, cfg);
             }
             count++;
         }

@@ -3,8 +3,6 @@ package io.github.happysnaker.hbotcore.boot;
 
 
 
-import xyz.cssxsh.mirai.tool.FixProtocolVersion;
-
 import java.io.File;
 import java.util.Objects;
 
@@ -31,9 +29,6 @@ public class Patch {
     }
 
     public static void patch() {
-        // 解决登录问题，https://github.com/cssxsh/fix-protocol-version
-        FixProtocolVersion.update();
-
         // 某些时候群聊消息发不出去，需要删除 account.secrets 文件夹
         File file = new File(HBot.BOT_DIR);
         if (file.isDirectory()) {

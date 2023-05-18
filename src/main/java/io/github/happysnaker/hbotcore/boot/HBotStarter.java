@@ -3,10 +3,18 @@ package io.github.happysnaker.hbotcore.boot;
 
 import io.github.happysnaker.hbotcore.config.ConfigManager;
 import io.github.happysnaker.hbotcore.cron.HBotCronJob;
+import io.github.happysnaker.hbotcore.handler.MessageEventHandler;
+import io.github.happysnaker.hbotcore.logger.Logger;
+import io.github.happysnaker.hbotcore.plugin.HBotPluginLoader;
+import io.github.happysnaker.hbotcore.plugin.HBotPluginRegistry;
 import io.github.happysnaker.hbotcore.proxy.MessageHandlerProxy;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+
+import java.io.File;
+import java.util.Objects;
 
 
 /**
@@ -33,26 +41,39 @@ public class HBotStarter {
         // 加载配置
         ConfigManager.loadConfig();
 
-        // 执行用户初始化逻辑
+        // 在登录之前执行初始化逻辑
         HBot.applicationContext.getBeanProvider(BotStartInitializer.class)
                 .stream()
                 .forEach(BotStartInitializer::init);
 
-        // 登录机器人
-        HBot.autoLogin();
+
+        // 扫描插件并加载
+        loadAndRegistryJars();
 
         // 后台任务
         HBotCronJob.cronIfEnable();
 
-        // 获取消息代理
-        MessageHandlerProxy messageHandler = new MessageHandlerProxy();
+        // 登录机器人被放在最后执行
+        HBot.autoLogin();
 
-        //订阅群聊消息事件
+        // 最后，订阅群聊消息事件
         GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, event -> {
-            if (messageHandler.shouldHandle(event, null)) {
-                messageHandler.handleMessageEvent(event, null);
-            }
+            ((MessageEventHandler) HBot.applicationContext.getBean("proxyHandler")).handleMessageEvent(event, null);
         });
+    }
+
+
+    @SneakyThrows
+    public static void loadAndRegistryJars() {
+        File dirs = new File(HBot.PLUGIN_DIR);
+        if (dirs.isDirectory()) {
+            for (File file : Objects.requireNonNull(dirs.listFiles())) {
+                if (file.getName().endsWith(".jar")) {
+                    Logger.info("Start load and registry plugin file " + file.getName());
+                    HBotPluginRegistry.registry(HBotPluginLoader.load(file));
+                }
+            }
+        }
     }
 }
 

@@ -2,6 +2,7 @@ package io.github.happysnaker.hbotcore.handler;
 
 import io.github.happysnaker.hbotcore.proxy.Context;
 import com.mchange.util.AssertException;
+import io.github.happysnaker.hbotcore.utils.HBotUtil;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -34,10 +35,15 @@ public class InterestFilterProxy {
     @Around("@annotation(filter)")
     public Object interestFilter(ProceedingJoinPoint joinPoint, InterestFilter filter) throws Throwable {
         assertTargetMethod(joinPoint);
-        return Interest.builder()
+        GroupMessageEvent event = (GroupMessageEvent) joinPoint.getArgs()[0];
+        boolean interest = Interest.builder()
                 .onCondition(filter)
                 .builder()
-                .isInterest((GroupMessageEvent) joinPoint.getArgs()[0]);
+                .isInterest(event);
+        if (interest && !filter.output().isEmpty()) {
+            event.getSubject().sendMessage(HBotUtil.parseMiraiCode(filter.output(), event));
+        }
+        return interest;
     }
 
     @Around("@annotation(filters)")

@@ -20,5 +20,6 @@ import java.lang.annotation.*;
 public @interface InterestFilter {
     String condition();
     Interest.MODE mode();
-    String callbackMethod() default "3.141592653"; // 3.141592653 means disable
+    String callbackMethod() default "";
+    String output() default "";
 }

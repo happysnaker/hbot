@@ -9,6 +9,6 @@ import org.springframework.context.annotation.Configuration;
  * @Email happysnaker@foxmail.com
  */
 @Configuration
-@ComponentScan("com.github.happysnaker.hbotcore")
+@ComponentScan("io.github.happysnaker.hbotcore")
 public class HBotConfig {
 }

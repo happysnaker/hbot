@@ -1,10 +1,13 @@
 package io.github.happysnaker.hbotcore;
 
 import io.github.happysnaker.hbotcore.config.ConfigManager;
-import com.github.happysnaker.hbotcore.handler.*;
+
 import io.github.happysnaker.hbotcore.handler.*;
 import io.github.happysnaker.hbotcore.permisson.Permission;
 import io.github.happysnaker.hbotcore.permisson.PermissionManager;
+import io.github.happysnaker.hbotcore.plugin.HBotPluginEntry;
+import io.github.happysnaker.hbotcore.plugin.HBotPluginLoader;
+import io.github.happysnaker.hbotcore.plugin.HBotPluginRegistry;
 import io.github.happysnaker.hbotcore.proxy.ContinuousDialogue;
 import io.github.happysnaker.hbotcore.utils.HBotUtil;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
@@ -12,6 +15,7 @@ import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 
 import javax.naming.CannotProceedException;
+import java.sql.Time;
 import java.util.List;
 
 /**
@@ -19,37 +23,29 @@ import java.util.List;
  * @Date 2023/4/21
  * @Email happysnaker@foxmail.com
  */
- @handler
 @InterestFilters({
         @InterestFilter(mode = Interest.MODE.PREFIX, condition = "你", callbackMethod = "m3"),
         @InterestFilter(mode = Interest.MODE.SUFFIX, condition = "我", callbackMethod = "m1")}
 )
 public class TestHandler extends AdaptInterestMessageEventHandler {
-    static Interest interest = Interest.builder()
-            .onCondition(Interest.MODE.CONTAINS, "123", "m0")
-            .onCondition(Interest.MODE.REGEX, "早.*", "m1")
-            .onCondition(Interest.MODE.SENDER, "1127423954", "m2")
-            .onCondition(Interest.builder()
-                    .onCondition(Interest.MODE.SENDER, "1637318597")
-                    .onCondition(Interest.MODE.REGEX, ".*帅.*")
-                    .matchAll(true)
-                    .builder(), "m3")
-            .builder();
-
     public List<MessageChain> m0(Interest.DispatchArgs args) {
         return HBotUtil.buildMessageChainAsSingletonList("456789");
     }
 
-    @Permission(PermissionManager.BOT_SUPER_ADMINISTRATOR)
     public List<MessageChain> m1(Interest.DispatchArgs args, MessageEvent event) throws Exception {
-        ConfigManager.loadConfig();
-        String content = getContent(args.getEvent());
+        HBotPluginRegistry.unRegistry("hrobot");
+        HBotPluginLoader.unLoad("hrobot");
+
+        Thread.sleep(3000L);
+        HBotPluginEntry plugin = HBotPluginLoader.load("hrobot-v1.0");
+        HBotPluginRegistry.registry(plugin);
+
+
         HBotUtil.sendMsgAsync(HBotUtil.buildMessageChainAsSingletonList("早什么早，早上要说我爱你"), event.getSubject());
         ContinuousDialogue.waitForNext((GroupMessageEvent) event, Interest.builder()
                 .onCondition(Interest.MODE.PREFIX, "对")
                 .builder());
-
-        return HBotUtil.buildMessageChainAsSingletonList("对你个头！");
+        return HBotUtil.buildMessageChainAsSingletonList("注册成功!");
     }
 
     public List<MessageChain> m2(Interest.DispatchArgs args) {

@@ -7,20 +7,22 @@
 <img src="https://img.shields.io/badge/Author-Happysnaker-green.svg">
 </p>
 
-HBot 出生于 [HRobot](https://github.com/happysnaker/mirai-plugin-HRobot)，是一款整合 [Mirai | mirai](https://mamoe.github.io/mirai/) 与 SpringBoot 的 **QQ 群机器人**开发框架，Java 开发人员可使用 Maven 快速整合 HBot 以开发属于你自己的 QQ 群机器人，或者将机器人打包发布给他人使用，亦或以 [MCL一键安装工具](https://github.com/iTXTech/mcl-installer) 插件的形式发布到 Mirai 社区。
+HBot 出生于 [HRobot](https://github.com/happysnaker/mirai-plugin-HRobot)，是一款整合 [Mirai | mirai](https://mamoe.github.io/mirai/) 与 SpringBoot 的 **QQ 群机器人**开发框架，Java 开发人员可使用 Maven 快速整合 HBot 以开发属于你自己的 QQ 群机器人，或将机器人打包发布给他人使用，或以 HBot-Plugin 提供全量服务，亦或以 [MCL一键安装工具](https://github.com/iTXTech/mcl-installer) 插件的形式发布到 Mirai 社区。
 
-<p align="center"><a href="http://baidu.com">HRobot</a> • <a href="http://baidu.com">使用文档</a></p>
+<p align="center"><a href="http://baidu.com">使用文档</a></p>
 
 
 ## 特性
 
-- **基于 JDK17 与 SpringBoot3.x**。HBot 完全基于 Java 开发，使用稳定版本 JDK17，对 Java 使用者友好。
+- **基于 JDK17 与 SpringBoot3.x**。HBot 完全基于 Java 开发，现代化 Java 风格，使用稳定版本 JDK17，对 Java 使用者友好。
 
 - **简单高效**。HBot 是一款基于消息事件的自动调度框架，使得开发人员专注与消息应答逻辑，简单易用，扩展性强。
 
 - **自动化的配置处理方式**。HBot 能够自动从配置文件中读取配置到程序的配置类中，供开发人员直接使用。
 
-- **适配多种场景发布**。HBot 由 [HRobot](https://github.com/happysnaker/mirai-plugin-HRobot) 抽离核心而来，因此 HBot 天然适配 [MCL Plugin](https://github.com/iTXTech/mcl-installer) 开发。
+- **可引入其他 HBot 应用**。HBot 开发出来的应用可互相引用，功能拓展十分方便。
+
+- **适配多种场景发布**。HBot 可发布 Jar 供他人使用，也可作为 HBot-Plugin 向其他 Hbot 提供全量服务，同时，HBot 亦天然适配 [MCL Plugin](https://github.com/iTXTech/mcl-installer) 开发。
 
 - **完善的命令处理机制与权限管理**。HBot 有着完善的命令处理机制与权限管理，可以使你的机器人更加健壮安全。
 

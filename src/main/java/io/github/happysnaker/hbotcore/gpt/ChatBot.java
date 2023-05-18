@@ -14,8 +14,6 @@ import lombok.Data;
 import lombok.NonNull;
 
 
-
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,14 +32,14 @@ import java.util.*;
 public class ChatBot {
     /**
      * 配置文件(包括 access_token)
-     *   {
-     *     "email": "OpenAI account email",
-     *     "password": "OpenAI account password",
-     *     "session_token": "<session_token>"
-     *     "access_token": "<access_token>"
-     *     "proxy": "<proxy_url_string>",
-     *     "paid": True/False, # whether this is a plus account
-     *  }
+     * {
+     * "email": "OpenAI account email",
+     * "password": "OpenAI account password",
+     * "session_token": "<session_token>"
+     * "access_token": "<access_token>"
+     * "proxy": "<proxy_url_string>",
+     * "paid": True/False, # whether this is a plus account
+     * }
      */
     private String config;
 
@@ -96,22 +94,23 @@ public class ChatBot {
 
     /**
      * 向gpt提问
-     * @param prompt 问题内容
-     * @param conversationId  UUID 会话id 用于继续上一次对话 默认为 null
-     * @param parentId UUID 上下文id 用于保持上下文 默认为 null
-     * @param model 模型名称 比如(gpt-4) 默认为 null
-     * @param timeout 超时时间 默认为 360s
+     *
+     * @param prompt         问题内容
+     * @param conversationId UUID 会话id 用于继续上一次对话 默认为 null
+     * @param parentId       UUID 上下文id 用于保持上下文 默认为 null
+     * @param model          模型名称 比如(gpt-4) 默认为 null
+     * @param timeout        超时时间 默认为 360s
      * @return
      */
     public String ask(String prompt, String conversationId, String parentId, String model, Integer timeout) {
 
         // 设置 parentId 的前提是 conversationId 已经存在
-        if(!StrUtil.isBlank(parentId) && StrUtil.isBlank(conversationId)){
+        if (!StrUtil.isBlank(parentId) && StrUtil.isBlank(conversationId)) {
             Logger.error("conversation_id must be set once parent_id is set");
             throw new IllegalArgumentException("conversation_id must be set once parent_id is set");
         }
 
-        if(!StrUtil.isBlank(conversationId) && !conversationId.equals(this.conversationId)) {
+        if (!StrUtil.isBlank(conversationId) && !conversationId.equals(this.conversationId)) {
             Logger.debug("Updating to new conversation by setting parent_id to None");
             this.parentId = null;
         }
@@ -119,16 +118,16 @@ public class ChatBot {
         conversationId = StrUtil.isBlank(conversationId) ? this.conversationId : conversationId;
         parentId = StrUtil.isBlank(parentId) ? this.parentId : parentId;
 
-        if(StrUtil.isBlank(conversationId) && StrUtil.isBlank(parentId)) {
+        if (StrUtil.isBlank(conversationId) && StrUtil.isBlank(parentId)) {
             parentId = UUID.randomUUID().toString();
             Logger.debug("New conversation, setting parent_id to new UUID4: {}", parentId);
         }
 
-        if(!StrUtil.isBlank(conversationId) && StrUtil.isBlank(parentId)) {
+        if (!StrUtil.isBlank(conversationId) && StrUtil.isBlank(parentId)) {
             if (!this.conversationMapping.containsKey(conversationId)) {
-                if(this.lazyLoading) {
+                if (this.lazyLoading) {
                     Logger.debug("Conversation ID {} not found in conversation mapping, try to get conversation history for the given ID", conversationId);
-                    try{
+                    try {
                         HashMap<String, Object> history = getMsgHistory(conversationId);
                         this.conversationMapping.put(conversationId, history.get("current_node"));
                     } catch (Exception e) {
@@ -139,7 +138,7 @@ public class ChatBot {
                     mapConversations();
                 }
             }
-            if(this.conversationMapping.containsKey(conversationId)) {
+            if (this.conversationMapping.containsKey(conversationId)) {
                 Logger.debug("Conversation ID {} found in conversation mapping, setting parent_id to {}", conversationId, MapUtil.getStr(this.conversationMapping, conversationId));
                 parentId = MapUtil.getStr(this.conversationMapping, conversationId);
             } else {
@@ -152,21 +151,21 @@ public class ChatBot {
         final String finalConversationId = conversationId;
         final String finalParentId = parentId;
         final String finalModel = model;
-        HashMap<String, Object> data = new HashMap<>(){{
+        HashMap<String, Object> data = new HashMap<>() {{
             put("action", "next");
             put("conversation_id", finalConversationId);
             put("parent_message_id", finalParentId);
             put("model", getModel(finalModel));
-            put("messages", new ArrayList<>(){{
-                add(new HashMap<String, Object>(){{
+            put("messages", new ArrayList<>() {{
+                add(new HashMap<String, Object>() {{
                     put("id", UUID.randomUUID().toString());
                     put("role", "user");
-                    put("author", new HashMap<String, String>(){{
+                    put("author", new HashMap<String, String>() {{
                         put("role", "user");
                     }});
-                    put("content", new HashMap<String, Object>(){{
+                    put("content", new HashMap<String, Object>() {{
                         put("content_type", "text");
-                        put("parts", new ArrayList<>(){{
+                        put("parts", new ArrayList<>() {{
                             add(prompt);
                         }});
                     }});
@@ -195,51 +194,51 @@ public class ChatBot {
             String line;
             boolean done = false;
             String msg = null;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                if(line.toLowerCase().equals("internal server error")) {
+                if (line.toLowerCase().equals("internal server error")) {
                     Logger.error("Internal server error: {}", line);
                     throw new RuntimeException("Internal server error");
                 }
-                if(StrUtil.isBlank(line)) {
+                if (StrUtil.isBlank(line)) {
                     continue;
                 }
-                if(line.startsWith("data: ")) {
+                if (line.startsWith("data: ")) {
                     line = line.substring(6);
                 }
-                if(line.equals("[DONE]")) {
+                if (line.equals("[DONE]")) {
                     done = true;
                     break;
                 }
                 line = line.replace("\\\"", "\"");
                 line = line.replace("\\'", "'");
                 line = line.replace("\\\\", "\\");
-                HashMap lineMap = new HashMap();
+                HashMap lineMap;
                 try {
                     lineMap = JSONUtil.toBean(line, HashMap.class);
                 } catch (Exception e) {
                     continue;
                 }
 
-                if(!checkFields(lineMap) || response.statusCode() != 200) {
+                if (!checkFields(lineMap) || response.statusCode() != 200) {
                     Logger.error("Field missing");
                     Logger.error(response.body().toString());
                     //TODO 根据状态码返回详细错误信息
-                    throw new RuntimeException("error");
+                    throw new RuntimeException("error, code is " + response.statusCode());
                 }
                 msg = MapUtil.get(MapUtil.get(MapUtil.get(lineMap, "message", Map.class),
-                        "content", Map.class),
+                                "content", Map.class),
                         "parts", List.class).get(0).toString();
-                if(prompt.equals(msg)) {
+                if (prompt.equals(msg)) {
                     continue;
                 }
                 conversationId = MapUtil.getStr(lineMap, "conversation_id");
                 parentId = MapUtil.getStr(MapUtil.get(lineMap, "message", Map.class), "id");
-                try{
+                try {
                     model = MapUtil.getStr(MapUtil.get(MapUtil.get(lineMap, "message", Map.class),
-                            "metadata", Map.class),
+                                    "metadata", Map.class),
                             "model_slug");
-                }catch (Exception e){
+                } catch (Exception e) {
                     model = null;
                 }
 
@@ -248,11 +247,12 @@ public class ChatBot {
                 Logger.debug("Received parent_id: {}", parentId);
             }
 
-            if(!done) {
+            if (!done) {
                 //TODO
+                throw new RuntimeException("Chatgpt 异常中止了本次对话，请重试");
             }
             this.conversationMapping.put(conversationId, parentId);
-            if(!StrUtil.isBlank(parentId)) {
+            if (!StrUtil.isBlank(parentId)) {
                 this.parentId = parentId;
             }
             if (!StrUtil.isBlank(conversationId)) {
@@ -260,17 +260,15 @@ public class ChatBot {
             }
 
             return msg;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
     private boolean checkFields(HashMap lineMap) {
-        try{
+        try {
             MapUtil.get(MapUtil.get(lineMap, "message", Map.class),
-                            "content", Map.class);
+                    "content", Map.class);
         } catch (Exception e) {
             return false;
         }
@@ -278,7 +276,7 @@ public class ChatBot {
     }
 
     private void checkResponse(HttpResponse response) {
-        if(response.statusCode() != 200) {
+        if (response.statusCode() != 200) {
             Logger.error("Response status code: {}", response.statusCode());
             Logger.error("Response body: {}", response.body());
             throw new RuntimeException("Response status code: " + response.statusCode() + ", message: " + response.body());
@@ -292,6 +290,7 @@ public class ChatBot {
 
     /**
      * 获取历史消息
+     *
      * @param conversationId
      * @return
      */
@@ -301,7 +300,7 @@ public class ChatBot {
                 .GET()
                 .build();
         HttpClient client = HttpClient.newHttpClient();
-        try{
+        try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             checkResponse(response);
             HashMap map = JSONUtil.toBean(response.body(), HashMap.class);
@@ -320,10 +319,10 @@ public class ChatBot {
     }
 
     public String ask(String prompt) {
-        return this.ask(prompt,36000);
+        return this.ask(prompt, 36000);
     }
 
     public String ask(String prompt, Integer timeout) {
-        return this.ask(prompt, null , null, null, timeout);
+        return this.ask(prompt, null, null, null, timeout);
     }
 }

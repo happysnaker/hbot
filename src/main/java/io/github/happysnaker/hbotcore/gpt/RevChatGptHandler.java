@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Date 2023/4/18
  * @Email happysnaker@foxmail.com
  */
-@handler(priority = Integer.MIN_VALUE)
+@handler(priority = -1)
 public class RevChatGptHandler extends AdaptInterestMessageEventHandler {
     protected static List<AuthConfig> authConfigs;
 

@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
  * @Date 2023/4/21
  * @Email happysnaker@foxmail.com
  */
-@Component
+//@Component
+@Deprecated
 public class InterestFilterPostProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {

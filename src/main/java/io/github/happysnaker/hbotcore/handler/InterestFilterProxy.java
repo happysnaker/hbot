@@ -1,5 +1,6 @@
 package io.github.happysnaker.hbotcore.handler;
 
+import io.github.happysnaker.hbotcore.command.AdaptInterestCommandEventHandler;
 import io.github.happysnaker.hbotcore.proxy.Context;
 import com.mchange.util.AssertException;
 import io.github.happysnaker.hbotcore.utils.HBotUtil;
@@ -18,42 +19,46 @@ import org.springframework.stereotype.Component;
 @Component
 public class InterestFilterProxy {
 
-    public static void assertTargetMethod(ProceedingJoinPoint jp) {
-        String methodName = jp.getSignature().getName(); // 获取被代理的方法名
-        if (!methodName.equals("shouldHandle")) {
-            throw new AssertException("InterestFilter can not annotation on method " + methodName);
-        }
-        Object[] args = jp.getArgs();
-        if (args[0] != null && !(args[0] instanceof GroupMessageEvent)) {
-            throw new AssertException("InterestFilter annotation error, first args not match" + args[0]);
-        }
-        if (args[1] != null && !(args[1] instanceof Context)) {
-            throw new AssertException("InterestFilter annotation error, second args not match" + args[1]);
-        }
-    }
 
-    @Around("@annotation(filter)")
-    public Object interestFilter(ProceedingJoinPoint joinPoint, InterestFilter filter) throws Throwable {
-        assertTargetMethod(joinPoint);
-        GroupMessageEvent event = (GroupMessageEvent) joinPoint.getArgs()[0];
-        boolean interest = Interest.builder()
+    @Around("@within(InterestFilter)")
+    public Object interestFilter(ProceedingJoinPoint jp) throws Throwable {
+        Object target = jp.getTarget();
+        InterestFilter filter = target.getClass().getAnnotation(InterestFilter.class);
+        Interest interest = Interest.builder()
                 .onCondition(filter)
-                .builder()
-                .isInterest(event);
-        if (interest && !filter.output().isEmpty()) {
-            event.getSubject().sendMessage(HBotUtil.parseMiraiCode(filter.output(), event));
+                .builder();
+        if (target instanceof AdaptInterestMessageEventHandler handler) {
+            handler.setInterest(interest);
+        } else if (target instanceof AdaptInterestCommandEventHandler handler) {
+            handler.setInterest(interest);
+        } else {
+            throw new IllegalStateException("InterestFilters only can annotation on ");
         }
-        return interest;
+        return jp.proceed();
     }
 
-    @Around("@annotation(filters)")
-    public Object interestFilters(ProceedingJoinPoint joinPoint, InterestFilters filters) throws Throwable {
-        // 这里编写拦截后的处理逻辑
+    @Around("@within(InterestFilters)")
+    public Object interestFilters(ProceedingJoinPoint jp) throws Throwable {
+        Object target = jp.getTarget();
+        InterestFilters filters = target.getClass().getAnnotation(InterestFilters.class);
         Interest.InterestBuilder builder = Interest.builder();
         for (InterestFilter filter : filters.value()) {
             builder.onCondition(filter);
         }
-        builder.matchAll(filters.matchAll());
-        return builder.builder().isInterest((GroupMessageEvent) joinPoint.getArgs()[0]);
+        if (!filters.matchAllCallbackMethod().isEmpty()) {
+            builder.matchAll(filters.matchAll(), filters.matchAllCallbackMethod(), true);
+        } else if (!filters.matchAllOutput().isEmpty()) {
+            builder.matchAll(filters.matchAll(), filters.matchAllOutput(), false);
+        } else {
+            builder.matchAll(filters.matchAll());
+        }
+        if (target instanceof AdaptInterestMessageEventHandler handler) {
+            handler.setInterest(builder.builder());
+        } else if (target instanceof AdaptInterestCommandEventHandler handler) {
+            handler.setInterest(builder.builder());
+        } else {
+            throw new IllegalStateException("InterestFilters only can annotation on ");
+        }
+        return jp.proceed();
     }
 }

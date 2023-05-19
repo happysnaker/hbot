@@ -87,7 +87,7 @@ public abstract class GroupMessageEventHandler extends HBotUtil implements Messa
      * @param event 群消息事件
      * @return 所有群成员的昵称，不包括机器人
      */
-    protected List<String> getMembersGroupName(GroupMessageEvent event) {
+    protected List<String> getMemberGroupName(GroupMessageEvent event) {
         ContactList<NormalMember> members = null;
         List<String> ans = new ArrayList<>();
         if ((members = getMembers(event)) != null) {
@@ -251,9 +251,17 @@ public abstract class GroupMessageEventHandler extends HBotUtil implements Messa
 
     /**
      *
-     * @return atAll
+     * @return 构造 atAll
      */
     protected AtAll alAll() {
         return AtAll.INSTANCE;
+    }
+
+
+    /**
+     * 获取成员
+     */
+    protected NormalMember getMember(GroupMessageEvent event, String qq) {
+        return event.getGroup().get(Long.parseLong(qq));
     }
 }

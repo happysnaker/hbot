@@ -1,6 +1,7 @@
 package io.github.happysnaker.hbotcore;
 
 import io.github.happysnaker.hbotcore.boot.EnableHBot;
+import io.github.happysnaker.hbotcore.boot.HBot;
 import io.github.happysnaker.hbotcore.plugin.HBotPluginLoader;
 import io.github.happysnaker.hbotcore.plugin.HBotPluginRegistry;
 import lombok.Data;
@@ -20,10 +21,9 @@ public class HBotCoreApplication {
     public static void main(String[] args) throws Exception {
         SpringApplication.run(HBotCoreApplication.class);
 
-        Scanner scanner = new Scanner(System.in);
-        scanner.next();
-        HBotPluginRegistry.unRegistry("hrobot");
-        HBotPluginLoader.unLoad("hrobot");
+        TestHandler handler = (TestHandler) HBot.applicationContext.getBean("testHandler");
+        handler.m0(null);
+        System.out.println();
     }
 }
 

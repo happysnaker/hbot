@@ -27,6 +27,7 @@ import java.util.List;
         @InterestFilter(mode = Interest.MODE.PREFIX, condition = "你", callbackMethod = "m3"),
         @InterestFilter(mode = Interest.MODE.SUFFIX, condition = "我", callbackMethod = "m1")}
 )
+@handler
 public class TestHandler extends AdaptInterestMessageEventHandler {
     public List<MessageChain> m0(Interest.DispatchArgs args) {
         return HBotUtil.buildMessageChainAsSingletonList("456789");

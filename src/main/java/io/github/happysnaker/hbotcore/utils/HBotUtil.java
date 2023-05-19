@@ -299,6 +299,17 @@ public class HBotUtil {
         return uploadImage(event.getSubject(), url);
     }
 
+
+    /**
+     * 网络图片并上传至腾讯服务器
+     *
+     * @param url   网络图片 URL
+     * @return net.mamoe.mirai.message.data.Image
+     */
+    public static Image uploadImage(URL url) throws FileUploadException {
+        return uploadImage(getAdaptContact(), url);
+    }
+
     /**
      * 网络图片并上传至腾讯服务器
      *
@@ -346,6 +357,8 @@ public class HBotUtil {
                 for (String str : strs) {
                     builder.append(str);
                 }
+            } else {
+                builder.append(new PlainText(s.toString()));
             }
         }
         return builder.build();
@@ -411,13 +424,13 @@ public class HBotUtil {
     }
 
     /**
-     * 简单引用并回复一条字符串消息
+     * 引用并回复一条消息
      *
      * @param event 引用的事件
      * @param msg   待回复的消息
      * @return 构造一条带有引用的消息回复
      */
-    public static MessageChain quoteReply(MessageEvent event, String... msg) {
+    public static MessageChain quoteReply(MessageEvent event, Object... msg) {
         return buildMessageChain(getQuoteReply(event), msg);
     }
 

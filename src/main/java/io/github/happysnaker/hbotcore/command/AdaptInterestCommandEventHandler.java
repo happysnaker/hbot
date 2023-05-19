@@ -2,11 +2,13 @@ package io.github.happysnaker.hbotcore.command;
 
 import io.github.happysnaker.hbotcore.exception.CanNotParseCommandException;
 import io.github.happysnaker.hbotcore.exception.InsufficientPermissionsException;
+import io.github.happysnaker.hbotcore.exception.NoDispatchActionException;
 import io.github.happysnaker.hbotcore.handler.Interest;
 import io.github.happysnaker.hbotcore.proxy.Context;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 
+import javax.naming.CannotProceedException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
@@ -31,6 +33,10 @@ public abstract class AdaptInterestCommandEventHandler extends DefaultCommandEve
                 throw ee;
             }
             throw new CanNotParseCommandException(e.getCause() == null ? e : e.getCause());
+        } catch (NoDispatchActionException e) {
+            throw new RuntimeException(e);
+        } catch (CannotProceedException e) {
+            throw new RuntimeException(e);
         }
     }
 

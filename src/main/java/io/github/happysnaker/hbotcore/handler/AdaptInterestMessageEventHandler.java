@@ -29,7 +29,11 @@ public class AdaptInterestMessageEventHandler extends GroupMessageEventHandler {
     @Override
     public List<MessageChain> handleMessageEvent(GroupMessageEvent event, Context ctx) {
         try {
-            return (List<MessageChain>) interest.dispatch(event, this, ctx);
+            Object dispatch = interest.dispatch(event, this, ctx);
+            if (dispatch instanceof List messageChains) {
+                return messageChains;
+            }
+            return buildMessageChainAsSingletonList(dispatch);
         } catch (Exception e) {
             Exception exception = e;
             if (e instanceof InvocationTargetException

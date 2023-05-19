@@ -15,4 +15,6 @@ import java.lang.annotation.*;
 public @interface InterestFilters {
     InterestFilter[] value();
     boolean matchAll() default false;
+    String matchAllCallbackMethod() default "";
+    String matchAllOutput() default "";
 }

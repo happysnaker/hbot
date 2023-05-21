@@ -1,13 +1,13 @@
 # HBot
 
+<p align="center"> <img src="./img.png" width = "400" height = "300" alt="守护最好的 kunkun称" align=center /></p>
+
 <p align='center'>
 <img src="https://img.shields.io/badge/style-Modern Java Style-brightgreen.svg">
 <img src="https://img.shields.io/badge/platform-%20WINDOWS | MAC | LINUX%20-ff69b4.svg">
 <img src="https://img.shields.io/badge/language-JAVA-orange.svg">
 <img src="https://img.shields.io/badge/Author-Happysnaker-green.svg">
 </p>
-
-![img.png](img.png)
 
 HBot 出生于 [HRobot](https://github.com/happysnaker/mirai-plugin-HRobot)，是一款整合 [Mirai | mirai](https://mamoe.github.io/mirai/) 与 SpringBoot 的 **QQ 群机器人**开发框架，Java 开发人员可使用 Maven 快速整合 HBot 以开发属于你自己的 QQ 群机器人，或以 HBot-Plugin 提供全量服务，亦或以 [MCL一键安装工具](https://github.com/iTXTech/mcl-installer) 插件的形式发布到 Mirai 社区。
 

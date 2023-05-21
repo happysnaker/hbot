@@ -7,6 +7,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -29,9 +30,16 @@ public class AdaptInterestMessageEventHandler extends GroupMessageEventHandler {
     @Override
     public List<MessageChain> handleMessageEvent(GroupMessageEvent event, Context ctx) {
         try {
-            Object dispatch = interest.dispatch(event, this, ctx);
-            if (dispatch instanceof List messageChains) {
-                return messageChains;
+            Object dispatch = interest.action(event, this, ctx);
+            if (dispatch == null) {
+                return null;
+            }
+            if (dispatch instanceof List list) {
+                if (dispatch instanceof MessageChain chain) {
+                    return Collections.singletonList(chain);
+                } else if (!list.isEmpty() && list.get(0) instanceof MessageChain) {
+                    return list;
+                }
             }
             return buildMessageChainAsSingletonList(dispatch);
         } catch (Exception e) {

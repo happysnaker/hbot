@@ -1,5 +1,6 @@
 package io.github.happysnaker.hbotcore.boot;
 
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -14,5 +15,6 @@ import java.lang.annotation.*;
 @Documented
 @Inherited
 @Import(HBotConfig.class)
+@EnableAspectJAutoProxy(exposeProxy = true)
 public @interface EnableHBot {
 }

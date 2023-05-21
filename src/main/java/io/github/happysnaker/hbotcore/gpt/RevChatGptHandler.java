@@ -68,9 +68,10 @@ public class RevChatGptHandler extends AdaptInterestMessageEventHandler {
         }
         AuthConfig auth = authConfigs.get(id);
         ChatBot bot = new ChatBot(auth);
-        bot.ask(presetContent);
+        Logger.info("Get the " + id + " auth to gpt.");
         sessionIsolation.put(groupId, bot);
         groupConfigIdx.put(groupId, (id + 1) % authConfigs.size()); // for next
+        bot.ask(presetContent);
         return bot;
     }
 
@@ -112,6 +113,8 @@ public class RevChatGptHandler extends AdaptInterestMessageEventHandler {
                     return buildMessageChainAsSingletonList(getQuoteReply(event), reply);
                 } catch (Exception e) {
                     ex = e;
+                    // get next
+                    sessionIsolation.remove(gid);
                 }
             }
         }

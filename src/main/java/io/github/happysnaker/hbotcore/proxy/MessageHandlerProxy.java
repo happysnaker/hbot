@@ -3,7 +3,7 @@ package io.github.happysnaker.hbotcore.proxy;
 
 import cn.hutool.core.util.StrUtil;
 import io.github.happysnaker.hbotcore.boot.HBot;
-import io.github.happysnaker.hbotcore.command.DefaultCommandEventHandlerManager;
+import io.github.happysnaker.hbotcore.command.HBotCommandEventHandlerManager;
 import io.github.happysnaker.hbotcore.handler.MessageEventHandler;
 import io.github.happysnaker.hbotcore.handler.handler;
 import io.github.happysnaker.hbotcore.intercept.Interceptor;
@@ -95,16 +95,16 @@ public class MessageHandlerProxy implements MessageEventHandler {
     @Override
     public List<MessageChain> handleMessageEvent(GroupMessageEvent event, Context ctx) {
         boolean isCommand = false;
-        if (HBotUtil.getOnlyPlainContent(event).startsWith(DefaultCommandEventHandlerManager.prefix)) {
+        if (HBotUtil.getOnlyPlainContent(event).startsWith(HBotCommandEventHandlerManager.prefix)) {
             isCommand = true;
             MessageChain chain = event.getMessage();
             for (SingleMessage message : chain) {
                 // remove command prefix
                 if (message instanceof PlainText str) {
-                    if (StrUtil.isEmpty(DefaultCommandEventHandlerManager.prefix)) {
+                    if (StrUtil.isEmpty(HBotCommandEventHandlerManager.prefix)) {
                         break;
                     }
-                    String plain = str.getContent().replaceFirst(DefaultCommandEventHandlerManager.prefix, "");
+                    String plain = str.getContent().replaceFirst(HBotCommandEventHandlerManager.prefix, "");
                     try {
                         Field content = PlainText.class.getDeclaredField("content");
                         content.setAccessible(true);
@@ -134,7 +134,7 @@ public class MessageHandlerProxy implements MessageEventHandler {
             event.getSubject()
                     .sendMessage(HBotUtil.buildMessageChain(
                             HBotUtil.getQuoteReply(event),
-                            "未能识别的命令格式 " + DefaultCommandEventHandlerManager.prefix + HBotUtil.getOnlyPlainContent(event)
+                            "未能识别的命令格式 " + HBotCommandEventHandlerManager.prefix + HBotUtil.getOnlyPlainContent(event)
                     ));
         }
         return null;

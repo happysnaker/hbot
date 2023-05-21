@@ -33,6 +33,17 @@ public interface PermissionManager {
      * 检测是否具有某权限
      * @param perm 待检测的权限
      * @param event 时间
+     * @return 是否具有某权限
+     */
+    default boolean hasPermission(int perm, GroupMessageEvent event) {
+        return hasPermission(perm, event, null);
+    }
+
+
+    /**
+     * 检测是否具有某权限
+     * @param perm 待检测的权限
+     * @param event 时间
      * @param ctx 上下文
      * @return 是否具有某权限
      */
@@ -44,7 +55,9 @@ public interface PermissionManager {
      * @param gid 群号，可置空，如果置空则如果 user 在任意群拥有群管理员权限，此方法返回都应当包含群管理员，否则，如果 user 是群管理员但是无此群的权限，返回结果将不会包含群管理员
      * @return 权限列表
      */
-    Set<Integer> getPermissionList(String user, String gid);
+    default Set<Integer> getPermissionList(String user, String gid) {
+        throw new RuntimeException("未实现的方法");
+    }
 
 
     /**

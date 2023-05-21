@@ -6,8 +6,8 @@ import io.github.happysnaker.hbotcore.cron.HBotCronJob;
 import io.github.happysnaker.hbotcore.handler.MessageEventHandler;
 import io.github.happysnaker.hbotcore.logger.Logger;
 import io.github.happysnaker.hbotcore.plugin.HBotPluginLoader;
-import io.github.happysnaker.hbotcore.plugin.HBotPluginRegistry;
-import io.github.happysnaker.hbotcore.proxy.MessageHandlerProxy;
+
+import io.github.happysnaker.hbotcore.plugin.HBotPluginRegister;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.event.GlobalEventChannel;
@@ -38,7 +38,10 @@ public class HBotStarter {
         // 打印 banner
         HBotPrinter.printBanner();
 
-        // 加载配置
+        // 扫描插件并加载
+        loadAndRegistryJars();
+
+        // 加载配置（连同插件配置）
         ConfigManager.loadConfig();
 
         // 在登录之前执行初始化逻辑
@@ -46,9 +49,6 @@ public class HBotStarter {
                 .stream()
                 .forEach(BotStartInitializer::init);
 
-
-        // 扫描插件并加载
-        loadAndRegistryJars();
 
         // 后台任务
         HBotCronJob.cronIfEnable();
@@ -70,7 +70,7 @@ public class HBotStarter {
             for (File file : Objects.requireNonNull(dirs.listFiles())) {
                 if (file.getName().endsWith(".jar")) {
                     Logger.info("Start load and registry plugin file " + file.getName());
-                    HBotPluginRegistry.registry(HBotPluginLoader.load(file));
+                    HBotPluginRegister.register(HBotPluginLoader.load(file));
                 }
             }
         }

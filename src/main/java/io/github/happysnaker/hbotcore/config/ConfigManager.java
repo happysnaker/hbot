@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,6 +38,10 @@ import static io.github.happysnaker.hbotcore.utils.HBotUtil.getContent;
  * </ul>
  */
 public class ConfigManager {
+    /**
+     * 插件中的配置类
+     */
+    public static final List<Class<?>> pluginClass = new ArrayList<>();
     /**
      * 用户指定的配置类
      */
@@ -109,18 +114,39 @@ public class ConfigManager {
      * @throws Exception 任何问题
      */
     public synchronized static void loadConfig() throws Exception {
+        File file = new File(HBot.CONFIG_DIR, "config.yaml");
+        if (!file.exists()) {
+            if (file.createNewFile()) {
+                IOUtil.writeToFile(file, template);
+                Logger.warning("配置文件被创建，请填写配置文件并重启程序生效");
+            }
+        }
+        // load plugin
+        for (Class<?> aClass : pluginClass) {
+            loadConfig(aClass, file);
+        }
         if (configClass == null) {
             try {
                 Map<String, Object> map = HBot.applicationContext.getBeansWithAnnotation(HBotConfigComponent.class);
                 configClass = map.values().iterator().next().getClass();
-                loadConfig();
+                loadConfig(configClass, file);
             } catch (NoSuchBeanDefinitionException | NoSuchElementException e) {
                 Logger.info("未指定程序配置类，将忽略加载默认配置文件过程");
             }
-            return;
+        } else {
+            loadConfig(configClass, file);
         }
+    }
+
+    /**
+     * 从指定文件加载到指定类中
+     *
+     * @param configClass
+     * @param file
+     * @throws Exception
+     */
+    public synchronized static void loadConfig(Class<?> configClass, File file) throws Exception {
         Yaml yaml = new Yaml();
-        File file = new File(HBot.CONFIG_DIR, "config.yaml");
         Field[] fields = configClass.getDeclaredFields();
         // 如果配置文件存在
         if (file.exists()) {
@@ -149,12 +175,17 @@ public class ConfigManager {
                         if (type instanceof ParameterizedType) {
                             Type[] types = ((ParameterizedType) type).getActualTypeArguments();
                             if (types != null && types.length > 0) {
-                                if (value instanceof Collection<?>) {
-                                    Collection<?> collection = new ArrayList<>();
-                                    for (Object o : ((List<?>) value)) {
-                                        collection.add(JSONObject.parseObject(JSONObject.toJSONString(o), types[0]));
+                                if (value instanceof Collection coll) {
+                                    boolean shouldTransform = !coll.isEmpty() &&
+                                            (!(types[0] instanceof Class) || !((Class) types[0]).isAssignableFrom(coll.iterator().next().getClass()));
+                                    if (shouldTransform) {
+                                        Collection<Object> collection = new ArrayList<>();
+                                        for (Object o : coll) {
+                                            collection.add(JSONObject.parseObject(JSONObject.toJSONString(o), types[0]));
+                                        }
+                                        coll.clear();
+                                        coll.addAll(collection);
                                     }
-                                    value = collection;
                                 }
                             }
                         }
@@ -182,17 +213,13 @@ public class ConfigManager {
                     }
                 }
             }
-        } else {
-            if (file.createNewFile()) {
-                IOUtil.writeToFile(file, template);
-                Logger.info("配置文件被创建，但未被加载，如需加载配置文件，请重启程序生效");
-            }
         }
     }
 
     /**
-     * 获取配置
-     * @param fieldName
+     * 获取配置（包含插件配置），如果与插件冲突，则以主配置类为主
+     *
+     * @param fieldName 配置名
      * @return
      */
     public static Object getConfig(String fieldName) {
@@ -201,16 +228,43 @@ public class ConfigManager {
             field.setAccessible(true);
             return field.get(null);
         } catch (Exception e) {
+            for (Class<?> aClass : pluginClass) {
+                try {
+                    Field field = aClass.getDeclaredField(fieldName);
+                    field.setAccessible(true);
+                    return field.get(null);
+                } catch (Exception ex) {
+                    continue;
+                }
+            }
             throw new RuntimeException(e);
         }
     }
 
     /**
-     * 将配置转换为 map 的形式返回，这将排除 {@link #excludeConfig} 包含的对象
+     * 将配置转换为 map 的形式返回（包含插件），这将排除 {@link #excludeConfig} 包含的对象
      *
      * @return 配置类转换的 Map 对象
      */
     public static Map<String, Object> getConfigMap() {
+        Map<String, Object> map = configClass == null ? new HashMap<>() : getConfigMap(configClass);
+        for (Class<?> aClass : pluginClass) {
+            Map<String, Object> plugin = getConfigMap(aClass);
+            for (Map.Entry<String, Object> it : plugin.entrySet()) {
+                if (!map.containsKey(it.getKey())) {
+                    map.put(it.getKey(), it.getValue());
+                }
+            }
+        }
+        return map;
+    }
+
+    /**
+     * 将指定配置转换为 map 的形式返回，这将排除 {@link #excludeConfig} 包含的对象
+     *
+     * @return 配置类转换的 Map 对象
+     */
+    public static Map<String, Object> getConfigMap(Class<?> configClass) {
         try {
             Field[] fields = configClass.getDeclaredFields();
             Map<String, Object> map = new HashMap<>();
@@ -227,7 +281,7 @@ public class ConfigManager {
     }
 
     /**
-     * 将配置动态写入配置文件
+     * 将配置动态(包含插件)写入配置文件
      */
     public synchronized static void writeConfig() throws Exception {
         Map<String, Object> map = JSONObject.parseObject(JSONObject.toJSONString(getConfigMap()));
@@ -235,7 +289,22 @@ public class ConfigManager {
         options.setPrettyFlow(true);
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         Yaml yaml = new Yaml(options);
-        try (FileWriter writer = new FileWriter(HBot.joinPath(HBot.CONFIG_DIR, "config.yaml"))) {
+        try (FileWriter writer = new FileWriter(HBot.joinPath(HBot.CONFIG_DIR, "config.yaml"), StandardCharsets.UTF_8)) {
+            yaml.dump(map, writer);
+        }
+    }
+
+    /**
+     * 将指定的配置类写回到指定的文件中
+     */
+    public synchronized static void writeConfig(Class<?> configClass, String fileName) throws Exception {
+        Map<String, Object> map = JSONObject.parseObject(
+                JSONObject.toJSONString(getConfigMap(configClass)));
+        DumperOptions options = new DumperOptions();
+        options.setPrettyFlow(true);
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        Yaml yaml = new Yaml(options);
+        try (FileWriter writer = new FileWriter(fileName)) {
             yaml.dump(map, writer);
         }
     }

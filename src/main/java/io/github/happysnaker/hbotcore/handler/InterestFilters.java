@@ -10,7 +10,7 @@ import java.lang.annotation.*;
  * @Email happysnaker@foxmail.com
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ElementType.TYPE})
 @Inherited
 public @interface InterestFilters {
     InterestFilter[] value();

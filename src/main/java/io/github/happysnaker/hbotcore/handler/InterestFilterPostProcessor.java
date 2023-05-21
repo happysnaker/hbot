@@ -1,6 +1,9 @@
 package io.github.happysnaker.hbotcore.handler;
 
 import io.github.happysnaker.hbotcore.command.AdaptInterestCommandEventHandler;
+import lombok.SneakyThrows;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
@@ -11,49 +14,54 @@ import org.springframework.stereotype.Component;
  * @Email happysnaker@foxmail.com
  */
 //@Component
-@Deprecated
+@Component
 public class InterestFilterPostProcessor implements BeanPostProcessor {
     @Override
+    @SneakyThrows
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        Interest.InterestBuilder builder = Interest.builder();
-        if (bean instanceof AdaptInterestCommandEventHandler handler) {
-            try {
-                InterestFilter filter = bean.getClass().getAnnotation(InterestFilter.class);
-                handler.setInterest(builder.onCondition(filter).builder());
-            } catch (NullPointerException e) {
-                try {
-                    InterestFilters filters = bean.getClass().getAnnotation(InterestFilters.class);
-                    for (InterestFilter filter : filters.value()) {
-                        builder.onCondition(filter);
-                    }
-                    handler.setInterest(builder.matchAll(filters.matchAll()).builder());
-                } catch (NullPointerException ignore) {
-                    // ignore
-                }
-            }
-        } else if (bean instanceof AdaptInterestMessageEventHandler handler) {
-            try {
-                InterestFilter filter = bean.getClass().getAnnotation(InterestFilter.class);
-                handler.setInterest(builder.onCondition(filter).builder());
-            } catch (NullPointerException e) {
-                try {
-                    InterestFilters filters = bean.getClass().getAnnotation(InterestFilters.class);
-                    for (InterestFilter filter : filters.value()) {
-                        builder.onCondition(filter);
-                    }
-                    handler.setInterest(builder.matchAll(filters.matchAll()).builder());
-                } catch (NullPointerException ignore) {
-                    // ignore
-                }
-            }
-        } else {
-            if (bean.getClass().isAnnotationPresent(InterestFilter.class)) {
-                throw new IllegalStateException("InterestFilter 只能在 AdaptInterest 类上生效");
-            }
-            if (bean.getClass().isAnnotationPresent(InterestFilters.class)) {
-                throw new IllegalStateException("InterestFilters 只能在 AdaptInterest 类上生效");
-            }
+        if (bean.getClass().isAnnotationPresent(InterestFilter.class)) {
+            injectInterestFilter(bean);
+        }
+        if (bean.getClass().isAnnotationPresent(InterestFilters.class)) {
+            injectInterestFilters(bean);
         }
         return bean;
+    }
+
+
+    public static void injectInterestFilter(Object target) throws Throwable {
+        InterestFilter filter = target.getClass().getAnnotation(InterestFilter.class);
+        Interest interest = Interest.builder()
+                .onCondition(filter)
+                .builder();
+        if (target instanceof AdaptInterestMessageEventHandler handler) {
+            handler.setInterest(interest);
+        } else if (target instanceof AdaptInterestCommandEventHandler handler) {
+            handler.setInterest(interest);
+        } else {
+            throw new IllegalStateException("InterestFilters only can annotation on ");
+        }
+    }
+
+    public static void injectInterestFilters(Object target) throws Throwable {
+        InterestFilters filters = target.getClass().getAnnotation(InterestFilters.class);
+        Interest.InterestBuilder builder = Interest.builder();
+        for (InterestFilter filter : filters.value()) {
+            builder.onCondition(filter);
+        }
+        if (!filters.matchAllCallbackMethod().isEmpty()) {
+            builder.matchAll(filters.matchAll(), filters.matchAllCallbackMethod(), true);
+        } else if (!filters.matchAllOutput().isEmpty()) {
+            builder.matchAll(filters.matchAll(), filters.matchAllOutput(), false);
+        } else {
+            builder.matchAll(filters.matchAll());
+        }
+        if (target instanceof AdaptInterestMessageEventHandler handler) {
+            handler.setInterest(builder.builder());
+        } else if (target instanceof AdaptInterestCommandEventHandler handler) {
+            handler.setInterest(builder.builder());
+        } else {
+            throw new IllegalStateException("InterestFilters only can annotation on ");
+        }
     }
 }

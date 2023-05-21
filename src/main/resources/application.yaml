@@ -3,17 +3,21 @@ spring:
     ansi:
       enabled: ALWAYS
 hrobot:
+  cron:   # 后台任务配置
+    enable: true  # 是否启动，默认开启
+    periodMinute: 3  # 每多少分钟执行，默认 3 次
   path:
-    rootDir: 'devbox'   # 默认为程序工作路径
-    botDir: 'bots'      # 内嵌在 rootDir 下，保存账号信息
-    dataDir: 'data'      # 内嵌在 rootDir 下，保存程序运行日志等数据信息
-    configDir: 'config'  # 内嵌在 rootDir 下，保存配置信息
+    rootDir: ''   # 默认为程序工作路径
+    botDir: 'bots'      # 内嵌在 rootDir 下，保存账号信息，默认为 bots
+    dataDir: 'data'      # 内嵌在 rootDir 下，保存程序运行日志等数据信息，默认为 data
+    configDir: 'config'  # 内嵌在 rootDir 下，保存配置信息，默认为 config
+    pluginDir: 'plugins' # 内嵌在 rootDir 下，保存插件信息，默认为 plugins
   command: # 命令控制配置
-    prefix: '#'
-    maxSaveBytes: 1024
-    errorLogFile: error.log
+    prefix: '#'       # 命令前缀，默认为 #
+    maxSaveBytes: 1024   # 命令保存字节数，默认为 1024
+    errorLogFile: command_error.log  # 命令执行出错保存的，默认为 command_error.log
   logging: # 日志输出配置
-    level: debug     # debug < info < warning < error，低于设定模式的日志不会被输出
-    toFileMod: 2   # 0 代表不输出到文件，1 仅将 warning 以上的日志会输出到文件，2 将所有日志输出到文件
+    level: debug     # debug < info < warning < error，低于设定模式的日志不会被输出，默认为 debug
+    toFileMod: 2   # 0 代表不输出到文件，1 仅将 warning 以上的日志会输出到文件，2 将所有日志输出到文件，默认为 0
     filePath: run.log    # 日志输出的文件，会自动保存在 dataDir 中，仅在 toFileMod 不为 0 的情况下有效，默认值为 run.log
-    maxSize: 1024kb     # 日志阈值，达到阈值时会新建日志文件，单位 kb、mb、gb
+    maxSize: 10mb     # 日志阈值，达到阈值时会新建日志文件，单位 kb、mb、gb，默认为 10mb

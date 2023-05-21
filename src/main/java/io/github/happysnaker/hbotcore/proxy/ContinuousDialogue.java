@@ -33,7 +33,8 @@ public class ContinuousDialogue {
 
     /**
      * 异步等待下一个条件发生
-     * @param event 事件，在一个长对话上判定同一个事件的标准为：群相同、发送人相同
+     *
+     * @param event    事件，在一个长对话上判定同一个事件的标准为：群相同、发送人相同
      * @param interest 条件
      * @return 异步事件
      */
@@ -67,6 +68,8 @@ public class ContinuousDialogue {
     }
 
 
+
+
     /**
      * 堵塞式的等待某个条件发生
      */
@@ -97,5 +100,12 @@ public class ContinuousDialogue {
 
     public static GroupMessageEvent waitForNext(Interest interest) throws Exception {
         return waitForNext(null, interest, -1);
+    }
+
+    /**
+     * 等待某个条件
+     */
+    public static GroupMessageEvent waitForNext(Interest interest, long timeoutMills) throws TimeoutException {
+        return waitForNext(null, interest, timeoutMills);
     }
 }

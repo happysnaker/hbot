@@ -1,7 +1,6 @@
 package io.github.happysnaker.hbotcore.utils;
 
 
-
 import com.alibaba.fastjson.JSONObject;
 import io.github.happysnaker.hbotcore.exception.CanNotSendMessageException;
 import io.github.happysnaker.hbotcore.exception.FileUploadException;
@@ -209,7 +208,32 @@ public class HBotUtil {
             builder.append(MiraiCode.deserializeMiraiCode(content.substring(fromIndex, matcher.start())));
             fromIndex = matcher.end();
             try {
-                switch (tag) {
+                String lowerCase = tag.toLowerCase();
+                if (lowerCase.startsWith("map")) {
+                    List<String> ps = new ArrayList<>();
+                    String key = lowerCase.substring("map".length());
+                    while (key.contains("[")) {
+                        int x = key.indexOf('[');
+                        int y = key.indexOf(']');
+                        ps.add(key.substring(x + 1, y).trim());
+                        key = key.substring(y + 1);
+                    }
+                    MapGetter mg = null;
+                    if (val.startsWith("http")) {
+                        mg = IOUtil.sendAndGetResponseMapGetter(new URL(val), "GET", null, null);
+                    } else {
+                        mg = new MapGetter(JSONObject.parseObject(IOUtil.readFile(new File(val)), Map.class));
+                    }
+                    for (int i = 0; i < ps.size(); i++) {
+                        if (i == ps.size() - 1) {
+                            builder.append(mg.getString(ps.get(i), true));
+                        } else {
+                            mg = mg.getMapGetter(ps.get(i));
+                        }
+                    }
+                    continue;
+                }
+                switch (lowerCase) {
                     case "img" -> {
                         if (contact == null) {
                             contact = getAdaptContact();
@@ -225,6 +249,13 @@ public class HBotUtil {
                             throw new CannotProceedException("没有消息源，无法引用发送人");
                         }
                         builder.append(Long.parseLong(val) == -1L ? AtAll.INSTANCE : new At(Long.parseLong(val)));
+                    }
+                    case "text" -> {
+                        if (val.startsWith("http")) {
+                            builder.append(IOUtil.sendAndGetResponseString(new URL(val), "GET", null, null));
+                        } else {
+                            builder.append(Files.readString(Path.of(val)));
+                        }
                     }
                     case "quote" -> throw new CannotProceedException("没有消息源，无法引用发送人");
                     default ->
@@ -303,7 +334,7 @@ public class HBotUtil {
     /**
      * 网络图片并上传至腾讯服务器
      *
-     * @param url   网络图片 URL
+     * @param url 网络图片 URL
      * @return net.mamoe.mirai.message.data.Image
      */
     public static Image uploadImage(URL url) throws FileUploadException {
@@ -356,6 +387,10 @@ public class HBotUtil {
             } else if (s instanceof String[] strs) {
                 for (String str : strs) {
                     builder.append(str);
+                }
+            } else if (s instanceof Collection<?> list) {
+                for (Object o : list) {
+                    builder.append(buildMessageChain(o));
                 }
             } else {
                 builder.append(new PlainText(s.toString()));
@@ -431,7 +466,7 @@ public class HBotUtil {
      * @return 构造一条带有引用的消息回复
      */
     public static MessageChain quoteReply(MessageEvent event, Object... msg) {
-        return buildMessageChain(getQuoteReply(event), msg);
+        return buildMessageChain(getQuoteReply(event), buildMessageChain(msg));
     }
 
     /**

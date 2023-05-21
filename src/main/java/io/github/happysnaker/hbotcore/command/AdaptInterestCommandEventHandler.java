@@ -10,6 +10,7 @@ import net.mamoe.mirai.message.data.MessageChain;
 
 import javax.naming.CannotProceedException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -18,13 +19,24 @@ import java.util.List;
  * @Email happysnaker@foxmail.com
  */
 @SuppressWarnings("unchecked")
-public abstract class AdaptInterestCommandEventHandler extends DefaultCommandEventHandlerManager {
+public abstract class AdaptInterestCommandEventHandler extends HBotCommandEventHandlerManager {
     protected Interest interest;
 
     @Override
     public List<MessageChain> parseCommand(GroupMessageEvent event, Context context) throws CanNotParseCommandException, InsufficientPermissionsException {
         try {
-            return (List<MessageChain>) interest.dispatch(event, this, context);
+            Object dispatch = interest.action(event, this, context);
+            if (dispatch == null) {
+                return null;
+            }
+            if (dispatch instanceof List list) {
+                if (dispatch instanceof MessageChain chain) {
+                    return Collections.singletonList(chain);
+                } else if (!list.isEmpty() && list.get(0) instanceof MessageChain) {
+                    return list;
+                }
+            }
+            return buildMessageChainAsSingletonList(dispatch);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             if (e.getCause() != null && e.getCause() instanceof InsufficientPermissionsException ee) {
                 throw ee;
@@ -33,9 +45,7 @@ public abstract class AdaptInterestCommandEventHandler extends DefaultCommandEve
                 throw ee;
             }
             throw new CanNotParseCommandException(e.getCause() == null ? e : e.getCause());
-        } catch (NoDispatchActionException e) {
-            throw new RuntimeException(e);
-        } catch (CannotProceedException e) {
+        } catch (NoDispatchActionException | CannotProceedException e) {
             throw new RuntimeException(e);
         }
     }

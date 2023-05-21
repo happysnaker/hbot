@@ -32,10 +32,12 @@ public class HBotPluginEntry {
     private JarFile jarFile;
     private String name;
     private Class<? extends HBotPlugin> pluginClass;
+    private Class<?> configClass;
     private URLClassLoader classLoader;
     private List<Pair<String, String>> customerClass;
     private List<Class<? extends MessageEventHandler>> handlerList;
     private List<Class<? extends Interceptor>> interceptorList;
     private List<Class<? extends ConfigListener>> configListenerList;
     private List<Class<? extends BotStartInitializer>> initializerList;
+    private List<Class<?>> allClass;
 }

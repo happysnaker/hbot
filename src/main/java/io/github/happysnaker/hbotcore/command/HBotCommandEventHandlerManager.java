@@ -2,11 +2,9 @@ package io.github.happysnaker.hbotcore.command;
 
 import io.github.happysnaker.hbotcore.boot.HBot;
 import io.github.happysnaker.hbotcore.logger.Logger;
-import io.github.happysnaker.hbotcore.utils.StringUtil;
 import io.github.happysnaker.hbotcore.utils.IOUtil;
 import lombok.SneakyThrows;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.*;
 
@@ -18,7 +16,8 @@ import java.io.*;
  *     <li>此类会将执行失败的命令写入错误日志</li>
  * </ul>
  */
-public abstract class DefaultCommandEventHandlerManager extends AbstractCommandEventHandler implements Serializable {
+
+public abstract class HBotCommandEventHandlerManager extends AbstractCommandEventHandler implements Serializable {
     /**
      * 命令前缀
      */
@@ -35,22 +34,6 @@ public abstract class DefaultCommandEventHandlerManager extends AbstractCommandE
 
     private static final StringBuffer cache = new StringBuffer();
 
-
-    @Value("${hrobot.command.prefix:#}")
-    protected void setPrefix(String prefix) {
-        if (prefix != null)
-            DefaultCommandEventHandlerManager.prefix = prefix;
-    }
-    @Value("${hrobot.command.maxSaveBytes:1024}")
-    public void setMaxSaveBytes(Integer maxSaveBytes) {
-        if (maxSaveBytes != null && maxSaveBytes >= 0)
-            DefaultCommandEventHandlerManager.maxSaveBytes = maxSaveBytes;
-    }
-    @Value("${hrobot.command.errorLogFile:}")
-    public void setErrorLogFile(String errorLogFile) {
-        if (!StringUtil.isNullOrEmpty(errorLogFile))
-            DefaultCommandEventHandlerManager.errorLogFile = HBot.joinPath(HBot.DATA_DIR, errorLogFile);
-    }
 
 
     @Override
@@ -79,7 +62,7 @@ public abstract class DefaultCommandEventHandlerManager extends AbstractCommandE
         sb.append("出错原因 ==>").append(errorMsg);
 
 
-        Logger.FILE_WRITER_EXECUTOR.submit(() -> {
+        Logger.EXECUTOR.submit(() -> {
             try {
                 IOUtil.writeToFile(new File(errorLogFile), sb.toString(), true);
             } catch (FileNotFoundException e) {

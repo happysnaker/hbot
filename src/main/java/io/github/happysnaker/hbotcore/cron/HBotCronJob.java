@@ -37,22 +37,12 @@ public class HBotCronJob implements Job {
     /**
      * 后台任务执行的间隔
      */
-    private static int PERIOD_MINUTE = 3;
+    public static int PERIOD_MINUTE = 3;
     /**
      * 是否允许机器人允许后台任务，如果不允许 HRobot 则不会运行后台任务
      */
-    private static boolean enable = true;
+    public static boolean enable = true;
 
-
-    @Value("${hrobot.cron.periodMinute:3}")
-    public void setPeriodMinute(int periodMinute) {
-        PERIOD_MINUTE = periodMinute;
-    }
-
-    @Value("${hrobot.cron.enable:true}")
-    public void setEnable(boolean periodMinute) {
-        enable = periodMinute;
-    }
 
     static {
         try {
@@ -138,6 +128,8 @@ public class HBotCronJob implements Job {
         return jobDetail.getKey().getName();
     }
 
+
+    
 
 
     /**

@@ -78,7 +78,7 @@ public class HBot {
             @Value("${hrobot.path.dataDir:}") String dataDir,
             @Value("${hrobot.path.configDir:}") String configDir,
             @Value("${hrobot.path.pluginDir:}") String pluginDir) {
-        setPath(rootDir, botDir, dataDir, configDir, pluginDir);
+        setWorkDir(rootDir, botDir, dataDir, configDir, pluginDir);
     }
 
 
@@ -91,7 +91,7 @@ public class HBot {
      * @param configDir 配置目录，此目录会内嵌在 rootDir，请勿在路径中包含 rootDir
      * @param pluginDir 插件目录，此目录会内嵌在 rootDir，请勿在路径中包含 rootDir
      */
-    public static void setPath(String rootDir, String botDir, String dataDir, String configDir, String pluginDir) {
+    public static void setWorkDir(String rootDir, String botDir, String dataDir, String configDir, String pluginDir) {
         if (!StringUtil.isNullOrEmpty(rootDir)) {
             ROOT_DIR = rootDir;
             File file = new File(ROOT_DIR);

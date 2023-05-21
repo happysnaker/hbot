@@ -25,7 +25,7 @@ import java.util.*;
  * @Date 2023/4/21
  * @Email happysnaker@foxmail.com
  */
-@Service
+@Service("hbotPermissionManager")
 @Order
 public class DefaultPermissionManager implements PermissionManager {
 
@@ -66,6 +66,7 @@ public class DefaultPermissionManager implements PermissionManager {
             return true;
         }
         Object config = ConfigManager.getConfig("botAdministrator");
+
         if (config instanceof Collection<?> coll) {
             for (Object o : coll) {
                 if (o != null && String.valueOf(o).equals(sender)) {

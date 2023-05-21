@@ -8,6 +8,7 @@ target/
 *.iml
 *.ipr
 *.iws
+*.jar
 
 # IntelliJ
 out/

@@ -1,15 +1,20 @@
 package io.github.happysnaker.hbotcore.proxy;
 
 
+import io.github.happysnaker.hbotcore.MyHandler;
 import io.github.happysnaker.hbotcore.exception.CanNotSendMessageException;
 import io.github.happysnaker.hbotcore.handler.MessageEventHandler;
 import io.github.happysnaker.hbotcore.intercept.Interceptor;
 import io.github.happysnaker.hbotcore.logger.Logger;
+import io.github.happysnaker.hbotcore.permisson.Permission;
+import lombok.Getter;
+import lombok.SneakyThrows;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
 import net.mamoe.mirai.message.data.MessageChain;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,8 +29,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Context {
     private final Map<String, Object> params = new ConcurrentHashMap<>();
+    @Getter
     private final List<MessageEventHandler> handlerList;
+    @Getter
     private final List<Interceptor> preInterceptorList;
+    @Getter
     private final List<Interceptor> postInterceptorList;
     private String message;
     private int index;
@@ -60,12 +68,16 @@ public class Context {
         return params.get(key);
     }
 
+
     /**
      * 在执行列表末尾添加一个 handler
      *
      * @return this
      */
     public Context addHandler(MessageEventHandler handler) {
+        if (handlerList.stream().anyMatch(h -> h.getClass().getName().equals(handler.getClass().getName()))) {
+            return this;
+        }
         handlerList.add(handler);
         return this;
     }
@@ -76,7 +88,23 @@ public class Context {
      * @return this
      */
     public Context addHandlerToNext(MessageEventHandler handler) {
+        if (handlerList.stream().anyMatch(h -> h.getClass().getName().equals(handler.getClass().getName()))) {
+            return this;
+        }
         handlerList.add(index + 1, handler);
+        return this;
+    }
+
+    /**
+     * 将参数 handler 添加至当前 handler 的上一个位置
+     *
+     * @return this
+     */
+    public Context addHandlerToPrev(MessageEventHandler handler) {
+        if (handlerList.stream().anyMatch(h -> h.getClass().getName().equals(handler.getClass().getName()))) {
+            return this;
+        }
+        handlerList.add(index, handler);
         return this;
     }
 
@@ -86,7 +114,18 @@ public class Context {
      * @return this
      */
     public Context removeHandler(MessageEventHandler handler) {
-        handlerList.remove(handler);
+        if (!handlerList.remove(handler)) {
+            MessageEventHandler rmHandler = null;
+            for (MessageEventHandler h : handlerList) {
+                if (h.getClass().getName().equals(handler.getClass().getName())) {
+                    rmHandler = h;
+                    break;
+                }
+            }
+            if (rmHandler != null) {
+                handlerList.remove(rmHandler);
+            }
+        }
         return this;
     }
 
@@ -126,7 +165,12 @@ public class Context {
             MessageEventHandler handler = handlerList.get(index);
             if (handler.shouldHandle(event, this)) {
                 execute = false;
-                res = handler.handleMessageEvent(event, this);
+                try {
+
+                    res = handler.handleMessageEvent(event, this);
+                } catch (Exception e) {
+                    Logger.error(e);
+                }
                 c++;
             }
             index++;
@@ -142,6 +186,26 @@ public class Context {
             Logger.error(e);
         }
         return c;
+    }
+
+    @SneakyThrows
+    private static void checkPermission(MessageEventHandler handler) {
+        Class<? extends MessageEventHandler> c = handler.getClass();
+        Permission permission = c.getAnnotation(Permission.class);
+        if (permission == null) {
+            for (Method method : c.getDeclaredMethods()) {
+                if (method.getName().equals("handleMessageEvent") || method.getName().equals("parseCommand")) {
+                    permission = method.getAnnotation(Permission.class);
+                    if (permission != null) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        checkPermission(new MyHandler());
     }
 
 

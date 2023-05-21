@@ -8,7 +8,6 @@ import io.github.happysnaker.hbotcore.utils.HBotUtil;
 import lombok.SneakyThrows;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.event.events.MessageEvent;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +16,6 @@ import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -56,65 +54,8 @@ public class Logger {
     /**
      * 文件单线程写入
      */
-    public static final ExecutorService FILE_WRITER_EXECUTOR = Executors.newFixedThreadPool(1);
+    public static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(1);
 
-    @Value("${hrobot.logging.level:debug}")
-    public void readLogLevel(String level) {
-        try {
-            logLevel = Integer.parseInt(level);
-        } catch (Exception ignore) {
-            logLevel = switch (level.toLowerCase(Locale.ROOT).trim()) {
-                case "debug" -> DEBUG;
-                case "info" -> INFO;
-                case "warning" -> WARNING;
-                case "error" -> ERROR;
-                default -> throw new IllegalStateException("Unexpected logLevel: " + level);
-            };
-        }
-        if (logLevel != DEBUG && logLevel != INFO && logLevel != WARNING && logLevel != ERROR) {
-            throw new IllegalStateException("Unexpected logLevel: " + level);
-        }
-    }
-
-    @Value("${hrobot.logging.toFileMod:0}")
-    public void readToFileMod(int mod) {
-        toFileMod = switch (mod) {
-            case 0 -> 0;
-            case 1 -> WARNING_ERROR_TO_FILE;
-            case 2 -> ALL_TO_FILE;
-            default -> throw new IllegalStateException("Unexpected toFileMod: " + mod);
-        };
-    }
-
-
-    @Value("${hrobot.logging.filePath:}")
-    public void readToFilePath(String path) {
-        if (path != null && !path.isEmpty()) {
-            logFile = path;
-            if (!path.contains(HBot.DATA_DIR)) {
-                logFile = HBot.joinPath(HBot.DATA_DIR, logFile);
-            }
-        }
-        if (logFile.endsWith(".log")) {
-            logFile = logFile.replace(".log", "");
-        }
-    }
-
-    @Value("${hrobot.logging.maxSize:10mb}")
-    public void readMaxFileSize(String size) {
-        size = size.toLowerCase(Locale.ROOT).trim();
-        try {
-            if (size.endsWith("gb")) {
-                fileSizeHolder = 1024 * 1024 * 1024 * Integer.parseInt(size.replace("gb", ""));
-            } else if (size.endsWith("mb")) {
-                fileSizeHolder = 1024 * 1024 * Integer.parseInt(size.replace("mb", ""));
-            } else if (size.endsWith("kb")) {
-                fileSizeHolder = 1024 * Integer.parseInt(size.replace("kb", ""));
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("Unexpected size holder: " + size);
-        }
-    }
 
     @SneakyThrows
     private static void toFile(String log, String level) {
@@ -152,7 +93,7 @@ public class Logger {
 
         String finalLog = log;
         File finalFile = file;
-        FILE_WRITER_EXECUTOR.submit(() -> {
+        EXECUTOR.submit(() -> {
             try {
                 IOUtil.writeToFile(finalFile, finalLog, true);
             } catch (FileNotFoundException e) {

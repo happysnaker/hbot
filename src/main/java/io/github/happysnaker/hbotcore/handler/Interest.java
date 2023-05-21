@@ -22,7 +22,7 @@ import java.util.*;
 /**
  * 此类是用于处理 {@link MessageEventHandler#shouldHandle(GroupMessageEvent, Context)} 的便捷方式<p>
  * 通过构造一系列条件表明对何种消息感兴趣，<strong>并便捷的调用对应的方法处理此事件</strong>，但请注意，如果此对象 {@link #matchAll} 属性被开启，
- * 则函数将不被允许调用 {@link #dispatch(GroupMessageEvent, Object, Object...)} 方法，因为需要匹配多个条件无法确定需要调用那个条件的回调函数，
+ * 则函数将不被允许调用 {@link #action(GroupMessageEvent, Object, Object...)} 方法，因为需要匹配多个条件无法确定需要调用那个条件的回调函数，
  * 可以通过复杂的嵌套 Interest 来实现这个需求
  * </p><p>此类是基于检测事件的文本信息进行匹配，<strong>at 或者图片等非文本将会被忽略</strong></p>
  *
@@ -429,7 +429,7 @@ public class Interest {
      * @return 返回结果
      * @throws NoDispatchActionException 没有配置对应的动作
      */
-    public Object dispatch(GroupMessageEvent event, Object proxy, Object... args) throws NoSuchMethodException,
+    public Object action(GroupMessageEvent event, Object proxy, Object... args) throws NoSuchMethodException,
             InvocationTargetException, IllegalAccessException, InsufficientPermissionsException, NoDispatchActionException, CannotProceedException {
         var check = checkInterestAction(event, this.matchAll);
         if (check == null) {

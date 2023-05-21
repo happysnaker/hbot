@@ -3,6 +3,7 @@ package io.github.happysnaker.hbotcore.plugin;
 import io.github.happysnaker.hbotcore.boot.BotStartInitializer;
 import io.github.happysnaker.hbotcore.boot.HBot;
 import io.github.happysnaker.hbotcore.config.ConfigListener;
+import io.github.happysnaker.hbotcore.config.HBotConfigComponent;
 import io.github.happysnaker.hbotcore.handler.MessageEventHandler;
 import io.github.happysnaker.hbotcore.handler.handler;
 import io.github.happysnaker.hbotcore.intercept.Intercept;
@@ -25,15 +26,15 @@ import java.util.jar.JarEntry;
 import java.util.stream.Collectors;
 
 /**
- * HBot 插件加载器，调用此类的 {@link #load(File)} 方法来加载一个插件 jar 包，将返回的插件信息拿到 {@link HBotPluginRegistry} 处注册，即可使用插件提供的功能
- * <p>调用 {@link #unLoad(String)} 可以卸载类重而达到热重载的功能，请勿忘了到 {@link HBotPluginRegistry} 处注销登记</p>
- * <p>此类与 {@link HBotPluginRegistry} 的区别在于，<strong>此类提供关于类的加载与卸载，而 {@link HBotPluginRegistry} 负责将插件功能插拔到 HBot 中去</strong></p>
+ * HBot 插件加载器，调用此类的 {@link #load(File)} 方法来加载一个插件 jar 包，将返回的插件信息拿到 {@link HBotPluginRegister} 处注册，即可使用插件提供的功能
+ * <p>调用 {@link #unLoad(String)} 可以卸载类重而达到热重载的功能，请勿忘了到 {@link HBotPluginRegister} 处注销登记</p>
+ * <p>此类与 {@link HBotPluginRegister} 的区别在于，<strong>此类提供关于类的加载与卸载，而 {@link HBotPluginRegister} 负责将插件功能插拔到 HBot 中去</strong></p>
  * <p>加载插件的顺序是先加载插件的类，在加载插件的功能；而注销插件的顺序是先注销插件功能，再卸载插件的类</p>
  *
  * @Author happysnaker
  * @Date 2023/5/14
  * @Email happysnaker@foxmail.com
- * @see HBotPluginRegistry
+ * @see HBotPluginRegister
  */
 public class HBotPluginLoader extends JarLauncher {
     private final File jarFile;
@@ -49,7 +50,7 @@ public class HBotPluginLoader extends JarLauncher {
         }
         Iterator<Archive> iterator = getClassPathArchivesIterator();
         URLClassLoader classLoader = null;
-
+//        super.launch(new String[]{});
         HBotPluginEntry plugin = new HBotPluginEntry();
         JarFile jar = new JarFile(jarFile);
         plugin.setJarFile(jar);
@@ -74,9 +75,10 @@ public class HBotPluginLoader extends JarLauncher {
                     Class<?> aClass = classLoader.loadClass(className);
                     if (HBotPlugin.class.isAssignableFrom(aClass)) {
                         plugin.setPluginClass((Class<? extends HBotPlugin>) aClass);
-                    } else {
-                        classList.add(aClass);
+                    } else if (aClass.isAnnotationPresent(HBotConfigComponent.class)) {
+                        plugin.setConfigClass(aClass);
                     }
+                    classList.add(aClass);
                 } catch (ClassNotFoundException | NoClassDefFoundError e) {
                     continue;
                 }
@@ -97,9 +99,10 @@ public class HBotPluginLoader extends JarLauncher {
                         Class<?> aClass = classLoader.loadClass(className);
                         if (HBotPlugin.class.isAssignableFrom(aClass)) {
                             plugin.setPluginClass((Class<? extends HBotPlugin>) aClass);
-                        } else {
-                            classList.add(aClass);
+                        } else if (aClass.isAnnotationPresent(HBotConfigComponent.class)) {
+                            plugin.setConfigClass(aClass);
                         }
+                        classList.add(aClass);
                     } catch (ClassNotFoundException | NoClassDefFoundError e) {
                         continue;
                     }
@@ -107,6 +110,7 @@ public class HBotPluginLoader extends JarLauncher {
             }
         }
         plugin.setClassLoader(classLoader);
+        plugin.setAllClass(classList);
         plugin.setHandlerList(classList.stream()
                 .filter(c -> c.isAnnotationPresent(handler.class))
                 .filter(MessageEventHandler.class::isAssignableFrom)
@@ -149,7 +153,7 @@ public class HBotPluginLoader extends JarLauncher {
      * 加载一个插件，如果已经加载过一次，则不会重新加载，除非它被注销
      *
      * @param name 插件名，对应的 jarFile 为 PLUGIN_DIR/name.jar
-     * @return 插件信息，可前往 {@link HBotPluginRegistry} 注册
+     * @return 插件信息，可前往 {@link HBotPluginRegister} 注册
      * @throws Exception
      */
     public static HBotPluginEntry load(String name) throws Exception {
@@ -160,7 +164,7 @@ public class HBotPluginLoader extends JarLauncher {
      * 加载一个插件，如果已经加载过一次，则不会重新加载，除非它被注销
      *
      * @param jarFile 插件文件
-     * @return 插件信息，可前往 {@link HBotPluginRegistry} 注册
+     * @return 插件信息，可前往 {@link HBotPluginRegister} 注册
      * @throws Exception
      */
     public static HBotPluginEntry load(File jarFile) throws Exception {
@@ -177,6 +181,7 @@ public class HBotPluginLoader extends JarLauncher {
 
     /**
      * 卸载一个插件
+     *
      * @param name 插件名
      * @throws IOException
      */
@@ -186,6 +191,7 @@ public class HBotPluginLoader extends JarLauncher {
 
     /**
      * 卸载一个插件
+     *
      * @param plugin 插件
      * @throws IOException
      */
@@ -206,10 +212,16 @@ public class HBotPluginLoader extends JarLauncher {
      * @return 插件信息
      */
     public static HBotPluginEntry get(String pluginName) {
-        if (pluginMap.get(pluginName) != null) {
-            return pluginMap.get(pluginName);
-        }
-        throw new NoSuchElementException();
+        return pluginMap.get(pluginName);
+    }
+
+    /**
+     * 获取当前系统中所有的插件
+     *
+     * @return 插件信息
+     */
+    public static Collection<HBotPluginEntry> getPlugins() {
+        return pluginMap.values();
     }
 }
 

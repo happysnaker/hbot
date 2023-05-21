@@ -9,7 +9,7 @@ accounts:
       protocol: ANDROID_PHONE
       enable: false   # 请注意，如果配置自动登录，务必将此参数改为 true
   - # 账号, 现只支持 QQ 数字账号，可配置多个账号
-    account: qq
+    account: 123456
     byQRCode: true  # 使用扫码登录，protocal 必须是 watch 或者 macos
     configuration:
       protocol: ANDROID_WATCH

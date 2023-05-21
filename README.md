@@ -28,25 +28,15 @@ HBot 出生于 [HRobot](https://github.com/happysnaker/mirai-plugin-HRobot)，�
 ## 特性
 
 - **基于 JDK17 与 SpringBoot3.x**。HBot 完全基于 Java 开发，现代化 Java 风格，使用稳定版本 JDK17，轻量级，Java 友好。
-
 - **简单高效**。HBot 是一款基于消息事件的自动调度框架，使得开发人员专注与消息应答逻辑，简单易用，扩展性强。
-
 - **自动化的配置处理方式**。HBot 能够自动从配置文件中读取配置到程序的配置类中，供开发人员直接使用。
-
 - **可引入其他 HBot 应用**。HBot 开发出来的应用可互相引用，功能拓展十分方便。
-
 - **适配多种场景发布**。HBot 可发布 Jar 供他人使用，也可作为 HBot-Plugin 向其他 Hbot 提供全量服务，同时，HBot 亦天然适配 [MCL Plugin](https://github.com/iTXTech/mcl-installer) 开发。
-
 - **完善的命令处理机制与权限管理**。HBot 有着完善的命令处理机制与权限管理，可以使你的机器人更加健壮安全。
-
 - **可定制化的定时调度事件**。HBot 基于 quartz 组件提供了定时调度任务的解决方案，使用 HBot 你可以便捷的在未来的某个时间点定时或者定期向一些群推送消息。
-
 - **动态标签**。HBot 能够解析一些具有动态语义的编码，例如 `[hrobot::text](http:xxxx)` 在解码时 HBot 会自动向对应地址请求一段文字。 
-
 - **支持长对话**。HBot 提供了对长对话的同步与异步 API 支持。
-
 - **内置轻量级逆向工程网页版 ChatGPT**。HBot 以 Java 源码的形式内置了当下最火热逆向工程版的 [ChatGPT](https://github.com/Pumpkin9841/Chatgpt-java)，使用者无需翻墙、无需付费即可快速搭建 ChatGPT 机器人。
-
 <details><summary><h2>快速使用</h2></summary>
 
 1. **安装**

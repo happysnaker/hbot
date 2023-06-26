@@ -37,8 +37,8 @@ HBot 出生于 [HRobot](https://github.com/happysnaker/mirai-plugin-HRobot)，�
 - **动态标签**。HBot 能够解析一些具有动态语义的编码，例如 `[hrobot::text](http:xxxx)` 在解码时 HBot 会自动向对应地址请求一段文字。 
 - **支持长对话**。HBot 提供了对长对话的同步与异步 API 支持。
 - **内置轻量级逆向工程网页版 ChatGPT**。HBot 以 Java 源码的形式内置了当下最火热逆向工程版的 [ChatGPT](https://github.com/Pumpkin9841/Chatgpt-java)，使用者无需翻墙、无需付费即可快速搭建 ChatGPT 机器人。
-<details><summary><h2>快速使用</h2></summary>
 
+## 快速使用
 1. **安装**
 
 maven 引入坐标：
@@ -49,14 +49,24 @@ maven 引入坐标：
     <version>${version}</version>
 </dependency>
 ```
+机器人依赖 kotlin 环境，如果你遇到 kotlinx-coroutines 与 kotlin 版本不匹配的问题，可以尝试引入指定版本的依赖：
+```xml
+<dependency>
+    <groupId>org.jetbrains.kotlinx</groupId>
+    <artifactId>kotlinx-coroutines-core-jvm</artifactId>
+    <version>1.6.4</version>
+</dependency>
+```
 
 2. **编写处理器**
 
 ```java
 @handler
 @InterestFilters(value = {
-        @InterestFilter(mode = Interest.MODE.REGEX, condition = ".*鸡汤.*", output = "[hrobot::$quote](quote)[hrobot::$text](https://api.qinor.cn/soup/)"),
-        @InterestFilter(mode = Interest.MODE.REGEX, condition = "早.+", output = "[hrobot::$at](sender)早早早，早上好！")
+        // 图片地址可能过期，请自行替换为有效的 api
+        @InterestFilter(mode = Interest.MODE.REGEX, condition = ".*图片.*", output = "[hrobot::$quote](quote)[hrobot::$img](https://shenzilong.cn/util/redirect_to_bing_daily_picture_address)"),
+        @InterestFilter(mode = Interest.MODE.REGEX, condition = "早.+", output = "[hrobot::$at](sender)早早早，早上好！"),
+        @InterestFilter(mode = Interest.MODE.REGEX, condition = "晚安.*", output = "晚安，好梦！")
 })
 public class InterestHandler extends AdaptInterestMessageEventHandler {
 }
@@ -64,23 +74,22 @@ public class InterestHandler extends AdaptInterestMessageEventHandler {
 
 3. **启动**
 
+添加 @EnableHBot 注解，随后登录机器人即可：
 ```java
 @SpringBootApplication
 @EnableHBot
 public class HBotDemoApplication {
-    static Scanner scanner = new Scanner(System.in);
-
     public static void main(String[] args) throws Exception {
-        Thread.currentThread().setContextClassLoader(PluginClassLoader.instance);
         SpringApplication.run(HBotDemoApplication.class, args);
         HBot.loginBotByQRCode(123456, BotConfiguration.MiraiProtocol.ANDROID_WATCH);
     }
 }
 ```
+输入关键字触发机器人回复逻辑：
+![image](https://github.com/happysnaker/hbot/assets/73147033/8f319736-2a5f-49ff-81bf-2ca5fb0d8468)
 
 更多使用方式请参考：[使用文档](https://www.yuque.com/anywhyobjdumpdbooto/rs18r6/pwzzkei38si0uga5)
 
-</details>
 
 
 ## 鸣谢
